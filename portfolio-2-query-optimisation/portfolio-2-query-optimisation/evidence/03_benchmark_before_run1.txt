@@ -1,0 +1,27 @@
++-----------------------+
+| extra_indexes_present |
++-----------------------+
+| NULL                  |
++-----------------------+
++----------+----------------------------------+---------+-------------+
+| query_id | description                      | avg_ms  | result_rows |
++----------+----------------------------------+---------+-------------+
+| Q1       | Account statement, one month     |   0.378 |           8 |
+| Q2       | Daily report, one day            | 102.505 |           6 |
+| Q3       | Failed transactions, last 7 days |  71.217 |        1114 |
+| Q4       | Failure reasons from event log   | 164.024 |           3 |
+| Q5       | Customer search by surname       |   1.807 |         712 |
+| Q6A      | Full statement using OR          | 125.779 |          58 |
+| Q6B      | Full statement using UNION ALL   |   0.516 |          58 |
++----------+----------------------------------+---------+-------------+
++----------+----------------------------------+---------+-------------+
+| query_id | description                      | avg_ms  | result_rows |
++----------+----------------------------------+---------+-------------+
+| Q1       | Account statement, one month     |   0.090 |           8 |
+| Q2       | Daily report, one day            | 103.659 |           6 |
+| Q3       | Failed transactions, last 7 days |  57.151 |        1114 |
+| Q4       | Failure reasons from event log   | 172.543 |           3 |
+| Q5       | Customer search by surname       |   2.165 |         712 |
+| Q6A      | Full statement using OR          | 104.744 |          58 |
+| Q6B      | Full statement using UNION ALL   |   0.094 |          58 |
++----------+----------------------------------+---------+-------------+

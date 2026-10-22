@@ -1,0 +1,16 @@
++----------------------------+---------+----------+----------+
+| Table                      | Op      | Msg_type | Msg_text |
++----------------------------+---------+----------+----------+
+| arcledger.customer         | analyze | status   | OK       |
+| arcledger.transactions     | analyze | status   | OK       |
+| arcledger.transaction_logs | analyze | status   | OK       |
++----------------------------+---------+----------+----------+
++------------------+-----------------------+-----------------------------+
+| TABLE_NAME       | INDEX_NAME            | columns                     |
++------------------+-----------------------+-----------------------------+
+| customer         | ix_customer_last_name | last_name                   |
+| transaction_logs | ix_logs_event_message | event,message               |
+| transactions     | ix_txn_account_date   | account_id,transaction_date |
+| transactions     | ix_txn_date           | transaction_date            |
+| transactions     | ix_txn_status_date    | status,transaction_date     |
++------------------+-----------------------+-----------------------------+

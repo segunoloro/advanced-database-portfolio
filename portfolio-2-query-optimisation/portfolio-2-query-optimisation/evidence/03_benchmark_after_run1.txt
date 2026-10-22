@@ -1,0 +1,27 @@
++------------------------------------------------------------------------------------------------+
+| extra_indexes_present                                                                          |
++------------------------------------------------------------------------------------------------+
+| ix_customer_last_name,ix_logs_event_message,ix_txn_account_date,ix_txn_date,ix_txn_status_date |
++------------------------------------------------------------------------------------------------+
++----------+----------------------------------+---------+-------------+
+| query_id | description                      | avg_ms  | result_rows |
++----------+----------------------------------+---------+-------------+
+| Q1       | Account statement, one month     |   0.374 |           8 |
+| Q2       | Daily report, one day            |  34.752 |           6 |
+| Q3       | Failed transactions, last 7 days |   0.762 |        1114 |
+| Q4       | Failure reasons from event log   |   6.431 |           3 |
+| Q5       | Customer search by surname       |   0.343 |         712 |
+| Q6A      | Full statement using OR          | 125.492 |          58 |
+| Q6B      | Full statement using UNION ALL   |   0.704 |          58 |
++----------+----------------------------------+---------+-------------+
++----------+----------------------------------+---------+-------------+
+| query_id | description                      | avg_ms  | result_rows |
++----------+----------------------------------+---------+-------------+
+| Q1       | Account statement, one month     |   0.047 |           8 |
+| Q2       | Daily report, one day            |  19.409 |           6 |
+| Q3       | Failed transactions, last 7 days |   0.329 |        1114 |
+| Q4       | Failure reasons from event log   |   4.849 |           3 |
+| Q5       | Customer search by surname       |   0.143 |         712 |
+| Q6A      | Full statement using OR          | 131.113 |          58 |
+| Q6B      | Full statement using UNION ALL   |   0.142 |          58 |
++----------+----------------------------------+---------+-------------+
