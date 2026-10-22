@@ -1,7 +1,0 @@
-table_name	row_count
-branch	20
-customer	10000
-account	15000
-transactions	515000
-transaction_transfer	225000
-transaction_logs	1030000
