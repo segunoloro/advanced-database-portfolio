@@ -20,7 +20,7 @@ A funds transfer changes **two** balances, writes **three** kinds of rows, and m
 1. Run `sql/01_setup.sql` once, on the Portfolio 1 database.
 2. Run `sql/02_commit_rollback.sql` (whole file) and `sql/03_trigger_tests.sql` (one statement at a time with **Ctrl+Enter**, since two are meant to fail).
 3. **Two-session demos (4–8):** you need two separate connections.
-   - Go to the Workbench **Home** tab and click your connection **again**. A second connection tab opens. ⚠️ Two *query tabs* inside one connection share **one** session and won't show any of these effects.
+   - Go to the Workbench **Home** tab and click your connection **again**. A second connection tab opens.  Two *query tabs* inside one connection share **one** session and won't show any of these effects.
    - Open `session1.sql` in the first connection tab and `session2.sql` in the second.
    - Run the steps **in number order**, switching tabs as the step numbers say: select a step's lines, then **Ctrl+Shift+Enter**.
    - When a step **waits** (the query keeps running), leave it and run the next step in the other tab. The waiting step finishes by itself.
@@ -127,8 +127,8 @@ InnoDB detects the cycle **immediately** and rolls back one transaction (the "vi
 | Committed | 340 | 478 |
 | Rolled back: insufficient funds | 48 | 22 |
 | **Rolled back: deadlock** | **112** | **0** (in 3 runs × 500) |
-| Alice + Bola | 200,000 ✅ | 200,000 ✅ |
-| Balances = transaction history | ✅ | ✅ |
+| Alice + Bola | 200,000  | 200,000  |
+| Balances = transaction history |  |  |
 | Any negative balance | no | no |
 
 ([before](evidence/stress_test_1_before_fix.txt), [after](evidence/stress_test_2_after_fix.txt))
