@@ -1,0 +1,180 @@
+Demo: demo8_deadlock
+Two separate connections: Session 1 id=85, Session 2 id=86
+
+===== STEP 1  (Session 1) =====
+  # Part A. Reset. Transfer 1 (Alice -> Bola) debits Alice: this LOCKS Alice's row.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > UPDATE account SET balance = balance - 10000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+
+===== STEP 2  (Session 2) =====
+  # Transfer 2 (Bola -> Alice) debits Bola: this LOCKS Bola's row.
+  > USE arcledger;
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > UPDATE account SET balance = balance - 20000 WHERE account_id = @B;
+   OK (1 row(s) affected)
+
+===== STEP 3  (Session 1) =====
+  # Transfer 1 now credits Bola - but Bola's row is locked by Session 2, so Session 1 WAITS. Leave it running and go to Session 2, step 4.
+  > UPDATE account SET balance = balance + 10000 WHERE account_id = @B;
+   ... Session 1 is WAITING for a lock held by the other session ...
+
+===== STEP 4  (Session 2) =====
+  # Transfer 2 now credits Alice - but Alice is locked by Session 1, which is waiting for Session 2. Neither can ever continue: a DEADLOCK. MySQL detects it immediately and rolls this transaction back. ERROR 1213 here is EXPECTED.
+  > UPDATE account SET balance = balance + 20000 WHERE account_id = @A;
+   ERROR 1213: Deadlock found when trying to get lock; try restarting transaction
+
+... Session 1, STEP 3 RESUMED - the lock it was waiting for was released:
+   OK (1 row(s) affected)
+   (this statement waited 2.3 s for a lock)
+
+===== STEP 5  (Session 1) =====
+  # Session 1's step 3 has completed: Session 2 was chosen as the deadlock victim. Commit. Only Transfer 1 happened: Alice 90,000, Bola 110,000. The application must retry Transfer 2.
+  > COMMIT;
+  > SELECT * FROM v_demo_balances;
+   +----------------+-------+-----------+--------+
+   | account_number | owner | balance   | status |
+   +----------------+-------+-----------+--------+
+   | 9000000001     | Alice | 90000.00  | ACTIVE |
+   | 9000000002     | Bola  | 110000.00 | ACTIVE |
+   +----------------+-------+-----------+--------+
+
+===== STEP 6  (Session 2) =====
+  # Evidence: InnoDB's own deadlock report. In Workbench, right-click the Status cell, choose Open Value in Viewer, and find 'LATEST DETECTED DEADLOCK'.
+  > SHOW ENGINE INNODB STATUS;
+   LATEST DETECTED DEADLOCK (from SHOW ENGINE INNODB STATUS):
+   | 2026-10-22 23:59:05 140030166275776
+   | *** (1) TRANSACTION:
+   | TRANSACTION 11857, ACTIVE 3 sec starting index read
+   | mysql tables in use 1, locked 1
+   | LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+   | MySQL thread id 85, OS thread handle 140029828462272, query id 76042 localhost root updating
+   | UPDATE account SET balance = balance + 10000 WHERE account_id = @B
+   | 
+   | *** (1) HOLDS THE LOCK(S):
+   | RECORD LOCKS space id 103 page no 149 n bits 160 index PRIMARY of table `arcledger`.`account` trx id 11857 lock_mode X locks rec but not gap
+   | Record lock, heap no 92 PHYSICAL RECORD: n_fields 10; compact format; info bits 0
+   |  0: len 4; hex 80003a99; asc   : ;;
+   |  1: len 6; hex 000000002e51; asc     .Q;;
+   |  2: len 7; hex 02000001452002; asc     E  ;;
+   |  3: len 10; hex 39303030303030303031; asc 9000000001;;
+   |  4: len 4; hex 80002711; asc   ' ;;
+   |  5: len 4; hex 80000001; asc     ;;
+   |  6: len 1; hex 02; asc  ;;
+   |  7: len 7; hex 800000015f9000; asc     _  ;;
+   |  8: len 1; hex 01; asc  ;;
+   |  9: len 3; hex 8fd556; asc   V;;
+   | 
+   | 
+   | *** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+   | RECORD LOCKS space id 103 page no 149 n bits 160 index PRIMARY of table `arcledger`.`account` trx id 11857 lock_mode X locks rec but not gap waiting
+   | Record lock, heap no 93 PHYSICAL RECORD: n_fields 10; compact format; info bits 0
+   |  0: len 4; hex 80003a9a; asc   : ;;
+   |  1: len 6; hex 000000002e52; asc     .R;;
+   |  2: len 7; hex 01000001462098; asc     F  ;;
+   |  3: len 10; hex 39303030303030303032; asc 9000000002;;
+   |  4: len 4; hex 80002712; asc   ' ;;
+   |  5: len 4; hex 80000001; asc     ;;
+   |  6: len 1; hex 02; asc  ;;
+   |  7: len 7; hex 80000001388000; asc     8  ;;
+   |  8: len 1; hex 01; asc  ;;
+   |  9: len 3; hex 8fd556; asc   V;;
+   | 
+   | 
+   | *** (2) TRANSACTION:
+   | TRANSACTION 11858, ACTIVE 3 sec starting index read
+   | mysql tables in use 1, locked 1
+   | LOCK WAIT 3 lock struct(s), heap size 1128, 2 row lock(s), undo log entries 1
+   | MySQL thread id 86, OS thread handle 140029833742016, query id 76043 localhost root updating
+   | UPDATE account SET balance = balance + 20000 WHERE account_id = @A
+   | 
+   | *** (2) HOLDS THE LOCK(S):
+   | RECORD LOCKS space id 103 page no 149 n bits 160 index PRIMARY of table `arcledger`.`account` trx id 11858 lock_mode X locks rec but not gap
+   | Record lock, heap no 93 PHYSICAL RECORD: n_fields 10; compact format; info bits 0
+   |  0: len 4; hex 80003a9a; asc   : ;;
+   |  1: len 6; hex 000000002e52; asc     .R;;
+   |  2: len 7; hex 01000001462098; asc     F  ;;
+   |  3: len 10; hex 39303030303030303032; asc 9000000002;;
+   |  4: len 4; hex 80002712; asc   ' ;;
+   |  5: len 4; hex 80000001; asc     ;;
+   |  6: len 1; hex 02; asc  ;;
+   |  7: len 7; hex 80000001388000; asc     8  ;;
+   |  8: len 1; hex 01; asc  ;;
+   |  9: len 3; hex 8fd556; asc   V;;
+   | 
+   | 
+   | *** (2) WAITING FOR THIS LOCK TO BE GRANTED:
+   | RECORD LOCKS space id 103 page no 149 n bits 160 index PRIMARY of table `arcledger`.`account` trx id 11858 lock_mode X locks rec but not gap waiting
+   | Record lock, heap no 92 PHYSICAL RECORD: n_fields 10; compact format; info bits 0
+   |  0: len 4; hex 80003a99; asc   : ;;
+   |  1: len 6; hex 000000002e51; asc     .Q;;
+   |  2: len 7; hex 02000001452002; asc     E  ;;
+   |  3: len 10; hex 39303030303030303031; asc 9000000001;;
+   |  4: len 4; hex 80002711; asc   ' ;;
+   |  5: len 4; hex 80000001; asc     ;;
+   |  6: len 1; hex 02; asc  ;;
+   |  7: len 7; hex 800000015f9000; asc     _  ;;
+   |  8: len 1; hex 01; asc  ;;
+   |  9: len 3; hex 8fd556; asc   V;;
+   | 
+   | *** WE ROLL BACK TRANSACTION (2)
+
+===== STEP 7  (Session 1) =====
+  # Part B - THE FIX. Reset. Both transfers lock the two accounts in the SAME order (lowest account_id first), exactly as sp_transfer does.
+  > CALL sp_reset_demo();
+  > START TRANSACTION;
+  > SELECT account_id FROM account WHERE account_id IN (@A, @B) ORDER BY account_id FOR UPDATE;
+   +------------+
+   | account_id |
+   +------------+
+   | 15001      |
+   | 15002      |
+   +------------+
+
+===== STEP 8  (Session 2) =====
+  # Transfer 2 locks in the SAME order (lowest account_id first). Alice's row is already locked by Session 1, so it WAITS - but waiting is not a deadlock. Leave it running and go to Session 1, step 9.
+  > START TRANSACTION;
+  > SELECT account_id FROM account WHERE account_id IN (@A, @B) ORDER BY account_id FOR UPDATE;
+   ... Session 2 is WAITING for a lock held by the other session ...
+
+===== STEP 9  (Session 1) =====
+  # Transfer 1 completes and commits. Session 2's step 8 then finishes by itself. No deadlock - the second transfer simply waited its turn.
+  > UPDATE account SET balance = balance - 10000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > UPDATE account SET balance = balance + 10000 WHERE account_id = @B;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+... Session 2, STEP 8 RESUMED - the lock it was waiting for was released:
+   +------------+
+   | account_id |
+   +------------+
+   | 15001      |
+   | 15002      |
+   +------------+
+   (this statement waited 2.3 s for a lock)
+
+===== STEP 10  (Session 2) =====
+  # Transfer 2 now runs and commits.
+  > UPDATE account SET balance = balance - 20000 WHERE account_id = @B;
+   OK (1 row(s) affected)
+  > UPDATE account SET balance = balance + 20000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+===== STEP 11  (Session 1) =====
+  # Both transfers succeeded: Alice 100,000 - 10,000 + 20,000 = 110,000; Bola 100,000 + 10,000 - 20,000 = 90,000.
+  > SELECT * FROM v_demo_balances;
+   +----------------+-------+-----------+--------+
+   | account_number | owner | balance   | status |
+   +----------------+-------+-----------+--------+
+   | 9000000001     | Alice | 110000.00 | ACTIVE |
+   | 9000000002     | Bola  | 90000.00  | ACTIVE |
+   +----------------+-------+-----------+--------+
+

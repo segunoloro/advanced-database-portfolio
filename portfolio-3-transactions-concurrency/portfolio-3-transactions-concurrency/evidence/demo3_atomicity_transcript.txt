@@ -1,0 +1,61 @@
+Demo: demo3_atomicity
+Two separate connections: Session 1 id=75, Session 2 id=76
+
+===== STEP 1  (Session 1) =====
+  # Reset, then start a transaction, DEBIT Alice N40,000 and record the transaction.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > UPDATE account SET balance = balance - 40000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > INSERT INTO transactions (transaction_ref, account_id, transaction_type, amount, status) VALUES ('ATOMICDEM...;
+   OK (1 row(s) affected)
+  > SET @t = LAST_INSERT_ID();
+  > SELECT * FROM v_demo_balances;
+   +----------------+-------+-----------+--------+
+   | account_number | owner | balance   | status |
+   +----------------+-------+-----------+--------+
+   | 9000000001     | Alice | 60000.00  | ACTIVE |
+   | 9000000002     | Bola  | 100000.00 | ACTIVE |
+   +----------------+-------+-----------+--------+
+
+===== STEP 2  (Session 1) =====
+  # Now record the destination - but account_id 0 does not exist, so the INSERT fails with a foreign key error (1452). A red error here is EXPECTED.
+  > INSERT INTO transaction_transfer (transaction_id, destination_account_id) VALUES (@t, 0);
+   ERROR 1452: Cannot add or update a child row: a foreign key constraint fails (`arcledger`.`transaction_transfer`, CONSTRAINT `fk_transfer_destination` FOREIGN KEY (`destination_account_id`) REFERENCES `account` (`account_id`))
+
+===== STEP 3  (Session 1) =====
+  # IMPORTANT: MySQL only undid the FAILED STATEMENT. The debit and the transaction row from step 1 are still pending - Alice still shows 60,000. The transaction is half done.
+  > SELECT * FROM v_demo_balances;
+   +----------------+-------+-----------+--------+
+   | account_number | owner | balance   | status |
+   +----------------+-------+-----------+--------+
+   | 9000000001     | Alice | 60000.00  | ACTIVE |
+   | 9000000002     | Bola  | 100000.00 | ACTIVE |
+   +----------------+-------+-----------+--------+
+  > SELECT COUNT(*) AS pending_transaction_rows FROM transactions WHERE transaction_ref = 'ATOMICDEMO0001';
+   +--------------------------+
+   | pending_transaction_rows |
+   +--------------------------+
+   | 1                        |
+   +--------------------------+
+
+===== STEP 4  (Session 1) =====
+  # So the WHOLE transaction must be rolled back. Everything from step 1 is undone: Alice is back to 100,000 and the transaction row is gone. All or nothing.
+  > ROLLBACK;
+  > SELECT * FROM v_demo_balances;
+   +----------------+-------+-----------+--------+
+   | account_number | owner | balance   | status |
+   +----------------+-------+-----------+--------+
+   | 9000000001     | Alice | 100000.00 | ACTIVE |
+   | 9000000002     | Bola  | 100000.00 | ACTIVE |
+   +----------------+-------+-----------+--------+
+  > SELECT COUNT(*) AS transaction_rows_after_rollback FROM transactions WHERE transaction_ref = 'ATOMICDEMO0001';
+   +---------------------------------+
+   | transaction_rows_after_rollback |
+   +---------------------------------+
+   | 0                               |
+   +---------------------------------+
+

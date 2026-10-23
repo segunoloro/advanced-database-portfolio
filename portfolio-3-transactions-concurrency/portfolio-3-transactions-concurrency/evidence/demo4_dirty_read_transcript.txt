@@ -1,0 +1,53 @@
+Demo: demo4_dirty_read
+Two separate connections: Session 1 id=77, Session 2 id=78
+
+===== STEP 1  (Session 1) =====
+  # Reset. Start a transaction and take N70,000 from Alice, but do NOT commit.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > UPDATE account SET balance = balance - 70000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > SELECT balance AS alice_balance_in_session1 FROM account WHERE account_id = @A;
+   +---------------------------+
+   | alice_balance_in_session1 |
+   +---------------------------+
+   | 30000.00                  |
+   +---------------------------+
+
+===== STEP 2  (Session 2) =====
+  # READ UNCOMMITTED: Session 2 sees Session 1's uncommitted N30,000. This is a DIRTY READ.
+  > USE arcledger;
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+  > SELECT @@transaction_isolation AS level, balance AS alice_balance_seen FROM account WHERE account_id = @A;
+   +------------------+--------------------+
+   | level            | alice_balance_seen |
+   +------------------+--------------------+
+   | READ-UNCOMMITTED | 30000.00           |
+   +------------------+--------------------+
+
+===== STEP 3  (Session 2) =====
+  # READ COMMITTED: the same read returns only committed data - N100,000. No dirty read.
+  > SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  > SELECT @@transaction_isolation AS level, balance AS alice_balance_seen FROM account WHERE account_id = @A;
+   +----------------+--------------------+
+   | level          | alice_balance_seen |
+   +----------------+--------------------+
+   | READ-COMMITTED | 100000.00          |
+   +----------------+--------------------+
+  > SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+===== STEP 4  (Session 1) =====
+  # Change of mind: ROLLBACK. The N30,000 balance never officially existed - yet Session 2 saw it in step 2.
+  > ROLLBACK;
+  > SELECT balance AS alice_balance_final FROM account WHERE account_id = @A;
+   +---------------------+
+   | alice_balance_final |
+   +---------------------+
+   | 100000.00           |
+   +---------------------+
+

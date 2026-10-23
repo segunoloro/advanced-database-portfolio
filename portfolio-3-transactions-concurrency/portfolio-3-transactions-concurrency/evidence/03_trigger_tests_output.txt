@@ -1,0 +1,80 @@
+--------------
+CALL sp_reset_demo()
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SET @deposit = (SELECT MIN(t.transaction_id) FROM transactions t
+                JOIN account a ON a.account_id = t.account_id
+                WHERE a.account_number = '9000000001' AND t.transaction_type = 'DEPOSIT')
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SET @alice   = (SELECT account_id FROM account WHERE account_number = '9000000001')
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+SET @bola    = (SELECT account_id FROM account WHERE account_number = '9000000002')
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+INSERT INTO transactions (transaction_ref, account_id, transaction_type, amount, status)
+VALUES ('TRIGGERTEST0001', @alice, 'TRANSFER', 100.00, 'FAILED')
+--------------
+
+Query OK, 1 row affected (0.00 sec)
+
+--------------
+SET @manual_transfer = LAST_INSERT_ID()
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+INSERT INTO transaction_transfer (transaction_id, destination_account_id) VALUES (@deposit, @bola)
+--------------
+
+ERROR 1644 (45000) at line 25: transaction_transfer rows are only allowed for TRANSFER transactions
+--------------
+INSERT INTO transaction_transfer (transaction_id, destination_account_id) VALUES (@manual_transfer, @alice)
+--------------
+
+ERROR 1644 (45000) at line 28: A transfer cannot go to the account it comes from
+--------------
+INSERT INTO transaction_transfer (transaction_id, destination_account_id) VALUES (@manual_transfer, @bola)
+--------------
+
+Query OK, 1 row affected (0.00 sec)
+
+--------------
+SELECT 'valid transfer row accepted' AS control_test, COUNT(*) AS rows_found
+FROM transaction_transfer WHERE transaction_id = @manual_transfer
+--------------
+
++-----------------------------+------------+
+| control_test                | rows_found |
++-----------------------------+------------+
+| valid transfer row accepted |          1 |
++-----------------------------+------------+
+1 row in set (0.00 sec)
+
+--------------
+DELETE FROM transaction_transfer WHERE transaction_id = @manual_transfer
+--------------
+
+Query OK, 1 row affected (0.00 sec)
+
+--------------
+DELETE FROM transactions WHERE transaction_id = @manual_transfer
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+Bye

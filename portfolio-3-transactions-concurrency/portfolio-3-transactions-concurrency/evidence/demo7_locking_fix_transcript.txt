@@ -1,0 +1,59 @@
+Demo: demo7_locking_fix
+Two separate connections: Session 1 id=83, Session 2 id=84
+
+===== STEP 1  (Session 1) =====
+  # Reset (Alice = 100,000). Withdrawal 1 reads AND LOCKS Alice's row.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > SELECT balance INTO @bal FROM account WHERE account_id = @A FOR UPDATE;
+   OK (1 row(s) affected)
+  > SELECT @bal AS balance_read_by_withdrawal_1;
+   +------------------------------+
+   | balance_read_by_withdrawal_1 |
+   +------------------------------+
+   | 100000.00                    |
+   +------------------------------+
+
+===== STEP 2  (Session 2) =====
+  # Withdrawal 2 reads with a lock. It WAITS (Workbench keeps the query running) because Session 1 holds the lock. Leave it running and go to Session 1, step 3.
+  > USE arcledger;
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > SELECT balance INTO @bal FROM account WHERE account_id = @A FOR UPDATE;
+   ... Session 2 is WAITING for a lock held by the other session ...
+
+===== STEP 3  (Session 1) =====
+  # Withdrawal 1 writes 70,000 and COMMITS, releasing the lock. Switch to Session 2: its step 2 finishes by itself and shows 70,000.
+  > UPDATE account SET balance = @bal - 30000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+... Session 2, STEP 2 RESUMED - the lock it was waiting for was released:
+   OK (1 row(s) affected)
+   (this statement waited 2.3 s for a lock)
+  > SELECT @bal AS balance_read_by_withdrawal_2;
+   +------------------------------+
+   | balance_read_by_withdrawal_2 |
+   +------------------------------+
+   | 70000.00                     |
+   +------------------------------+
+
+===== STEP 4  (Session 2) =====
+  # Withdrawal 2 now calculates from the CORRECT balance: 70,000 - 50,000 = 20,000.
+  > UPDATE account SET balance = @bal - 50000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+===== STEP 5  (Session 1) =====
+  # Check: Alice has 20,000 = 100,000 - 30,000 - 50,000. Both withdrawals counted, nothing lost.
+  > SELECT balance AS alice_actual, 100000 - 30000 - 50000 AS alice_expected FROM account WHERE account_id = @A;
+   +--------------+----------------+
+   | alice_actual | alice_expected |
+   +--------------+----------------+
+   | 20000.00     | 20000          |
+   +--------------+----------------+
+

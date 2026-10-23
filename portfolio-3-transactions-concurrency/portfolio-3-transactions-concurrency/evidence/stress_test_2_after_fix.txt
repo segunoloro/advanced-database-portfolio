@@ -1,0 +1,14 @@
+Start: Alice 100,000 + Bola 100,000 = 200,000
+10 sessions x 50 transfers each, random direction, N1,000-N30,000
+
+Finished 500 transfer attempts in 0.9 s
+
+Outcomes:
+    478  COMMITTED
+     22  ROLLED BACK: Insufficient funds
+Database errors (deadlocks, lock timeouts): 0
+
+Alice:    56,000.00   rebuilt from history:    56,000.00   OK
+Bola:    144,000.00   rebuilt from history:   144,000.00   OK
+Total:   200,000.00   (must be 200,000.00)  OK
+Any negative balance: no

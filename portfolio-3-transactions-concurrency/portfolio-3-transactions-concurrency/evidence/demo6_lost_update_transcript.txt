@@ -1,0 +1,55 @@
+Demo: demo6_lost_update
+Two separate connections: Session 1 id=81, Session 2 id=82
+
+===== STEP 1  (Session 1) =====
+  # Reset (Alice = 100,000). Withdrawal 1 (N30,000) reads the balance into the application.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > SELECT balance INTO @bal FROM account WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > SELECT @bal AS balance_read_by_withdrawal_1;
+   +------------------------------+
+   | balance_read_by_withdrawal_1 |
+   +------------------------------+
+   | 100000.00                    |
+   +------------------------------+
+
+===== STEP 2  (Session 2) =====
+  # Withdrawal 2 (N50,000) reads the balance at the same moment - also 100,000.
+  > USE arcledger;
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > START TRANSACTION;
+  > SELECT balance INTO @bal FROM account WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > SELECT @bal AS balance_read_by_withdrawal_2;
+   +------------------------------+
+   | balance_read_by_withdrawal_2 |
+   +------------------------------+
+   | 100000.00                    |
+   +------------------------------+
+
+===== STEP 3  (Session 1) =====
+  # Withdrawal 1 writes its result: 100,000 - 30,000 = 70,000, and commits.
+  > UPDATE account SET balance = @bal - 30000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+===== STEP 4  (Session 2) =====
+  # Withdrawal 2 writes ITS result: 100,000 - 50,000 = 50,000, overwriting Withdrawal 1's 70,000.
+  > UPDATE account SET balance = @bal - 50000 WHERE account_id = @A;
+   OK (1 row(s) affected)
+  > COMMIT;
+
+===== STEP 5  (Session 1) =====
+  # Check: N80,000 was withdrawn in total, so Alice should have 20,000. She has 50,000 - Withdrawal 1 was LOST. The bank paid out N30,000 that the balance does not show.
+  > SELECT balance AS alice_actual, 100000 - 30000 - 50000 AS alice_expected FROM account WHERE account_id = @A;
+   +--------------+----------------+
+   | alice_actual | alice_expected |
+   +--------------+----------------+
+   | 50000.00     | 20000          |
+   +--------------+----------------+
+

@@ -1,0 +1,75 @@
+Demo: demo5_non_repeatable_read
+Two separate connections: Session 1 id=79, Session 2 id=80
+
+===== STEP 1  (Session 2) =====
+  # Part A - READ COMMITTED. Reset, start a transaction, read Alice's balance: 100,000.
+  > USE arcledger;
+  > CALL sp_reset_demo();
+  > SET @A = (SELECT account_id FROM account WHERE account_number = '9000000001');
+  > SET @B = (SELECT account_id FROM account WHERE account_number = '9000000002');
+  > SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
+  > START TRANSACTION;
+  > SELECT @@transaction_isolation AS level, balance AS first_read FROM account WHERE account_id = @A;
+   +----------------+------------+
+   | level          | first_read |
+   +----------------+------------+
+   | READ-COMMITTED | 100000.00  |
+   +----------------+------------+
+
+===== STEP 2  (Session 1) =====
+  # Alice sends Bola N25,000 and it COMMITS.
+  > USE arcledger;
+  > CALL sp_transfer('9000000001', '9000000002', 25000.00);
+   +-----------+----------------------+----------+--------------+------------+
+   | outcome   | transaction_ref      | amount   | from_balance | to_balance |
+   +-----------+----------------------+----------+--------------+------------+
+   | COMMITTED | TRF02134331358578699 | 25000.00 | 75000.00     | 125000.00  |
+   +-----------+----------------------+----------+--------------+------------+
+
+===== STEP 3  (Session 2) =====
+  # Same transaction, same query: now 75,000. The value changed under us - a NON-REPEATABLE READ.
+  > SELECT balance AS second_read FROM account WHERE account_id = @A;
+   +-------------+
+   | second_read |
+   +-------------+
+   | 75000.00    |
+   +-------------+
+  > COMMIT;
+
+===== STEP 4  (Session 2) =====
+  # Part B - REPEATABLE READ (MySQL's default). Reset, start a transaction, read: 100,000.
+  > CALL sp_reset_demo();
+  > SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+  > START TRANSACTION;
+  > SELECT @@transaction_isolation AS level, balance AS first_read FROM account WHERE account_id = @A;
+   +-----------------+------------+
+   | level           | first_read |
+   +-----------------+------------+
+   | REPEATABLE-READ | 100000.00  |
+   +-----------------+------------+
+
+===== STEP 5  (Session 1) =====
+  # Alice sends Bola N25,000 again (Session 2 reset the accounts) and it COMMITS.
+  > CALL sp_transfer('9000000001', '9000000002', 25000.00);
+   +-----------+----------------------+----------+--------------+------------+
+   | outcome   | transaction_ref      | amount   | from_balance | to_balance |
+   +-----------+----------------------+----------+--------------+------------+
+   | COMMITTED | TRF02134331358578702 | 25000.00 | 75000.00     | 125000.00  |
+   +-----------+----------------------+----------+--------------+------------+
+
+===== STEP 6  (Session 2) =====
+  # Same query: STILL 100,000, although Session 1 committed. REPEATABLE READ gives the transaction a consistent snapshot. After COMMIT a new read sees 75,000.
+  > SELECT balance AS second_read_same_transaction FROM account WHERE account_id = @A;
+   +------------------------------+
+   | second_read_same_transaction |
+   +------------------------------+
+   | 100000.00                    |
+   +------------------------------+
+  > COMMIT;
+  > SELECT balance AS read_after_commit FROM account WHERE account_id = @A;
+   +-------------------+
+   | read_after_commit |
+   +-------------------+
+   | 75000.00          |
+   +-------------------+
+

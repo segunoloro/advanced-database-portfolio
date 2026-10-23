@@ -1,0 +1,15 @@
+Start: Alice 100,000 + Bola 100,000 = 200,000
+10 sessions x 50 transfers each, random direction, N1,000-N30,000
+
+Finished 500 transfer attempts in 1.2 s
+
+Outcomes:
+    340  COMMITTED
+    112  ROLLED BACK: Deadlock found when trying to get lock; try restarting transaction
+     48  ROLLED BACK: Insufficient funds
+Database errors (deadlocks, lock timeouts): 0
+
+Alice:    83,000.00   rebuilt from history:    83,000.00   OK
+Bola:    117,000.00   rebuilt from history:   117,000.00   OK
+Total:   200,000.00   (must be 200,000.00)  OK
+Any negative balance: no
