@@ -1,0 +1,96 @@
+Parameters: customer BVN 23000000001, account 1000000071, day 2026-09-15, week 2026-10-09..16
+Documents: customers 10002, transactions 515002
+
+==== S1 Customer profile with accounts (by BVN) ====
+{
+  query: 'S1',
+  description: 'Customer profile with accounts (by BVN)',
+  stages: 'EXPRESS_IXSCAN',
+  indexes: 'uq_customer_bvn',
+  docs_examined: 1,
+  keys_examined: 1,
+  avg_ms: 1.4
+}
+
+==== S2 Full statement with $or (out + in) ====
+{
+  query: 'S2',
+  description: 'Full statement with $or (out + in)',
+  stages: 'FETCH, SORT_MERGE, IXSCAN',
+  indexes: 'ix_account_date, ix_destination_date',
+  docs_examined: 54,
+  keys_examined: 54,
+  avg_ms: 6.6
+}
+
+==== S3a Daily report - no date index ====
+{
+  query: 'S3a',
+  description: 'Daily report - no date index',
+  stages: 'GROUP, COLLSCAN',
+  indexes: 'none',
+  docs_examined: 515002,
+  keys_examined: 0,
+  avg_ms: 501.3
+}
+
+==== S4a Failed in last 7 days, by reason - no index ====
+{
+  query: 'S4a',
+  description: 'Failed in last 7 days, by reason - no index',
+  stages: 'COLLSCAN',
+  indexes: 'none',
+  docs_examined: 515002,
+  keys_examined: 0,
+  avg_ms: 337.2
+}
+
+Created indexes: ix_txn_date {transaction_date}, ix_txn_status_date {status, transaction_date}
+
+==== S3b Daily report - with ix_txn_date ====
+{
+  query: 'S3b',
+  description: 'Daily report - with ix_txn_date',
+  stages: 'GROUP, FETCH, IXSCAN',
+  indexes: 'ix_txn_date',
+  docs_examined: 4544,
+  keys_examined: 4544,
+  avg_ms: 84.8
+}
+
+==== S4b Failed in last 7 days, by reason - with ix_txn_status_date ====
+{
+  query: 'S4b',
+  description: 'Failed in last 7 days, by reason - with ix_txn_status_date',
+  stages: 'FETCH, IXSCAN',
+  indexes: 'ix_txn_status_date, ix_txn_date',
+  docs_examined: 1114,
+  keys_examined: 1114,
+  avg_ms: 11.4
+}
+
+==== Storage ====
+{
+  collection: 'customers',
+  documents: 10002,
+  avg_doc_bytes: 489,
+  data_mb_uncompressed: 4.7,
+  storage_mb_on_disk_compressed: 1.1,
+  indexes_mb: 2.2
+}
+{
+  collection: 'transactions',
+  documents: 515002,
+  avg_doc_bytes: 357,
+  data_mb_uncompressed: 175.7,
+  storage_mb_on_disk_compressed: 39,
+  indexes_mb: 93.2
+}
+
+==== Summary ====
+S1   Customer profile with accounts (by BVN)              EXPRESS_IXSCAN             docs=      1       1.4 ms
+S2   Full statement with $or (out + in)                   FETCH, SORT_MERGE, IXSCAN  docs=     54       6.6 ms
+S3a  Daily report - no date index                         GROUP, COLLSCAN            docs= 515002     501.3 ms
+S4a  Failed in last 7 days, by reason - no index          COLLSCAN                   docs= 515002     337.2 ms
+S3b  Daily report - with ix_txn_date                      GROUP, FETCH, IXSCAN       docs=   4544      84.8 ms
+S4b  Failed in last 7 days, by reason - with ix_txn_status_date FETCH, IXSCAN              docs=   1114      11.4 ms

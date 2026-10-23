@@ -1,0 +1,3 @@
+Collections: branches, customers, transactions
+customers indexes: _id_, uq_customer_bvn, uq_customer_phone, uq_account_number
+transactions indexes: _id_, uq_transaction_ref, ix_account_date, ix_destination_date

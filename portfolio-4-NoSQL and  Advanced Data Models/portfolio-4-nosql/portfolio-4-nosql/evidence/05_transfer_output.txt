@@ -1,0 +1,18 @@
+Sender:   Ibrahim 1000010001  (customer 1)
+Receiver: Emeka 1000010002  (customer 2)
+
+Before:  sender 4555348.97  |  receiver 3985180.77
+COMMITTED   MDEMO-TRF-0001: 50000 from 1000010001 to 1000010002
+After 1: sender 4505348.97  |  receiver 4035180.77
+ROLLED BACK MDEMO-TRF-0002: Insufficient funds or inactive account
+After 2: sender 4505348.97  |  receiver 4035180.77
+ROLLED BACK MDEMO-TRF-0003: Destination account not found
+After 3: sender 4505348.97  |  receiver 4035180.77
+
+Recorded attempts:
+  MDEMO-TRF-0001  SUCCESSFUL  Completed
+  MDEMO-TRF-0002  FAILED  Insufficient funds or inactive account
+  MDEMO-TRF-0003  FAILED  Destination account not found
+COMMITTED   MDEMO-TRF-0004: 50000 from 1000010002 to 1000010001
+
+Demo transfers reversed and removed. Sender 4555348.97, receiver 3985180.77 (back to the start).

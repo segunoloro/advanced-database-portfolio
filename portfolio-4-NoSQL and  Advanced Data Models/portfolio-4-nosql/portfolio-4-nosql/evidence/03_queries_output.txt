@@ -1,0 +1,254 @@
+Examples used: customer BVN 23000000001, transfer BLK000000015011, statement account 1000000071
+
+==== Q1 Customer profile (single document read) ====
+{
+  first_name: 'Ibrahim',
+  last_name: 'Okeke',
+  phone: '+2348070000001',
+  accounts: [
+    {
+      account_number: '1000000001',
+      account_type: 'CURRENT',
+      balance: Decimal128('3653192.24'),
+      status: 'ACTIVE',
+      opened_date: ISODate('2024-04-29T00:00:00.000Z'),
+      branch: {
+        branch_id: 19,
+        branch_name: 'Abuja Branch 019',
+        city: 'Abuja'
+      }
+    },
+    {
+      account_number: '1000010001',
+      account_type: 'SAVINGS',
+      balance: Decimal128('4555348.97'),
+      status: 'ACTIVE',
+      opened_date: ISODate('2024-12-27T00:00:00.000Z'),
+      branch: {
+        branch_id: 10,
+        branch_name: 'Kano Branch 010',
+        city: 'Kano'
+      }
+    }
+  ]
+}
+
+==== Q2 Transfer with details and log events (single document read) ====
+{
+  transaction_ref: 'BLK000000015011',
+  account_number: '1000010880',
+  type: 'TRANSFER',
+  amount: Decimal128('544.60'),
+  status: 'SUCCESSFUL',
+  transaction_date: ISODate('2026-07-12T17:45:16.000Z'),
+  events: [
+    {
+      event: 'INITIATED',
+      at: ISODate('2026-07-12T17:45:16.000Z'),
+      message: 'TRANSFER request received'
+    },
+    {
+      event: 'SUCCESSFUL',
+      at: ISODate('2026-07-12T17:45:18.000Z'),
+      message: 'Completed'
+    }
+  ],
+  transfer: {
+    destination_account_number: '1000000071'
+  }
+}
+
+==== Q3 Statement for 1000000071 (latest 10) ====
+{
+  type: 'WITHDRAWAL',
+  date: ISODate('2026-10-16T20:07:18.000Z'),
+  ref: 'BLK000000207968',
+  direction: 'DEBIT',
+  amount: '1931.28'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-13T13:32:17.000Z'),
+  ref: 'BLK000000087053',
+  direction: 'DEBIT',
+  amount: '3717.57'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-11T16:03:56.000Z'),
+  ref: 'BLK000000081838',
+  direction: 'DEBIT',
+  amount: '6409.42'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-11T07:26:06.000Z'),
+  ref: 'BLK000000057298',
+  direction: 'DEBIT',
+  amount: '5958.19'
+}
+{
+  type: 'DEPOSIT',
+  date: ISODate('2026-10-07T08:16:34.000Z'),
+  ref: 'BLK000000064720',
+  direction: 'CREDIT',
+  amount: '154603.60'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-05T08:46:46.000Z'),
+  ref: 'BLK000000278936',
+  direction: 'CREDIT',
+  amount: '2969.53'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-04T08:29:59.000Z'),
+  ref: 'BLK000000506316',
+  direction: 'DEBIT',
+  amount: '978.96'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-10-02T15:47:47.000Z'),
+  ref: 'BLK000000500895',
+  direction: 'CREDIT',
+  amount: '8233.10'
+}
+{
+  type: 'DEPOSIT',
+  date: ISODate('2026-09-29T09:59:47.000Z'),
+  ref: 'BLK000000262324',
+  direction: 'CREDIT',
+  amount: '45396.78'
+}
+{
+  type: 'TRANSFER',
+  date: ISODate('2026-09-24T17:02:56.000Z'),
+  ref: 'BLK000000146198',
+  direction: 'CREDIT',
+  amount: '4206.58'
+}
+
+==== Q4 Failure reasons ====
+{
+  count: 5039,
+  reason: 'Daily limit exceeded'
+}
+{
+  count: 4957,
+  reason: 'Insufficient funds'
+}
+{
+  count: 4934,
+  reason: 'Network timeout'
+}
+
+==== Q5 Volume by type and status ====
+{
+  count: 4457,
+  type: 'DEPOSIT',
+  status: 'FAILED',
+  total: '447791249.67'
+}
+{
+  count: 160545,
+  type: 'DEPOSIT',
+  status: 'SUCCESSFUL',
+  total: '59537109434.13'
+}
+{
+  count: 6778,
+  type: 'TRANSFER',
+  status: 'FAILED',
+  total: '34182128.10'
+}
+{
+  count: 218222,
+  type: 'TRANSFER',
+  status: 'SUCCESSFUL',
+  total: '1102679151.07'
+}
+{
+  count: 3695,
+  type: 'WITHDRAWAL',
+  status: 'FAILED',
+  total: '18652252.60'
+}
+{
+  count: 121305,
+  type: 'WITHDRAWAL',
+  status: 'SUCCESSFUL',
+  total: '612570615.03'
+}
+
+==== Q6 Total balances by branch (top 5) ====
+{
+  accounts: 807,
+  branch: 'Ibadan Branch 015',
+  total: '3209419269.12'
+}
+{
+  accounts: 802,
+  branch: 'Port Harcourt Branch 002',
+  total: '3178556922.59'
+}
+{
+  accounts: 788,
+  branch: 'Enugu Branch 017',
+  total: '3160911953.46'
+}
+{
+  accounts: 782,
+  branch: 'Kano Branch 010',
+  total: '3084340458.24'
+}
+{
+  accounts: 769,
+  branch: 'Abuja Branch 013',
+  total: '3011186752.88'
+}
+
+==== Q7 Transfers with receiver name via $lookup (first 5) ====
+{
+  ref: 'BLK000000015011',
+  from: '1000010880',
+  to: '1000000071',
+  amount: '544.60',
+  receiver: 'Chioma Balogun'
+}
+{
+  ref: 'BLK000000015012',
+  from: '1000005962',
+  to: '1000004373',
+  amount: '6645.38',
+  receiver: 'Aisha Danjuma'
+}
+{
+  ref: 'BLK000000015013',
+  from: '1000008662',
+  to: '1000003146',
+  amount: '1453.57',
+  receiver: 'Kunle Nwosu'
+}
+{
+  ref: 'BLK000000015014',
+  from: '1000013144',
+  to: '1000005333',
+  amount: '3498.93',
+  receiver: 'Amaka Nwosu'
+}
+{
+  ref: 'BLK000000015015',
+  from: '1000011742',
+  to: '1000004232',
+  amount: '6893.01',
+  receiver: 'Musa Danjuma'
+}
+
+==== Q8 Balance reconciliation, all accounts ====
+{
+  accounts_ok: 15002,
+  accounts_mismatch: 0,
+  mismatches: []
+}

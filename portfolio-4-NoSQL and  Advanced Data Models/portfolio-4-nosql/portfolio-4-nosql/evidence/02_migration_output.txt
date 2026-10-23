@@ -1,0 +1,16 @@
+Migration finished in 44.7 s
+
+MySQL table(s)                          MySQL rows       MongoDB  where
+branch                                          20            20  branches documents  OK
+customer                                    10,002        10,002  customers documents  OK
+account                                     15,002        15,002  embedded in customers.accounts[]  OK
+transactions                               515,002       515,002  transactions documents  OK
+transaction_transfer                       225,000       225,000  embedded transactions.transfer  OK
+transaction_logs                         1,030,004     1,030,004  embedded transactions.events[]  OK
+
+Sum of all balances  MySQL: 58,924,538,819.10   MongoDB: 58,924,538,819.10   OK
+
+Documents rejected by the MongoDB validators:
+  branches      0
+  customers     0
+  transactions  0

@@ -1,0 +1,24 @@
+Duplicating: BVN 23000000001, phone +2348070000001, account 1000000001, reference BLK000000000001
+
+PASS  T01 BVN with letters  -> rejected: document failed validation
+PASS  T02 Duplicate BVN  -> rejected: duplicate key (unique index)
+PASS  T03 Duplicate phone  -> rejected: duplicate key (unique index)
+PASS  T04 Missing required field (phone)  -> rejected: document failed validation
+PASS  T05 Account number already held by another customer  -> rejected: duplicate key (unique index)
+PASS  T06 Negative account balance  -> rejected: document failed validation
+PASS  T07 Invalid account type  -> rejected: document failed validation
+PASS  T08 Balance as float, not Decimal128  -> rejected: document failed validation
+PASS  T09 Zero amount  -> rejected: document failed validation
+PASS  T10 Negative amount  -> rejected: document failed validation
+PASS  T11 Unknown type  -> rejected: document failed validation
+PASS  T12 Duplicate reference  -> rejected: duplicate key (unique index)
+PASS  T13 TRANSFER without transfer details  -> rejected: document failed validation
+PASS  T14 DEPOSIT carrying transfer details  -> rejected: document failed validation
+PASS  T15 Transfer to the same account  -> rejected: document failed validation
+PASS  T16 Transaction with no events  -> rejected: document failed validation
+
+-- Known gap: no foreign keys in MongoDB --
+ACCEPTED: a transaction for account 0000000000, which does not exist. MySQL's foreign key rejects this.
+
+16 of 16 invalid writes rejected
+Test documents left behind: 0
