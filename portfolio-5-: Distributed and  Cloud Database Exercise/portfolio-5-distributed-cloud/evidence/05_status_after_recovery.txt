@@ -1,0 +1,13 @@
+=== After restarting 27017 ===
+Checked from: localhost:27018   at 2026-10-27T21:15:16.543Z
+Primary now : localhost:27018
+
+member             state       health  last optime              votes
+localhost:27017    SECONDARY   1       2026-10-27T21:15:14.000Z 1
+localhost:27018    PRIMARY     1       2026-10-27T21:15:14.000Z 1
+localhost:27019    SECONDARY   1       2026-10-27T21:15:14.000Z 1
+
+rs_demo records on each reachable member (must be equal once all have caught up):
+  localhost:27017    42
+  localhost:27018    42
+  localhost:27019    42

@@ -1,0 +1,7 @@
+rs.remove("localhost:27018") -> ok: 1
+rs.remove("localhost:27019") -> ok: 1
+
+rs0 members now:
+  localhost:27017  PRIMARY
+
+Optional: remove the demo collection with  db.getSiblingDB('arcledger').rs_demo.drop()

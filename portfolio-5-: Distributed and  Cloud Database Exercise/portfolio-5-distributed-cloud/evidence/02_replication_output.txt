@@ -1,0 +1,25 @@
+Primary: localhost:27017
+Secondaries: localhost:27018, localhost:27019
+
+-- Full copy of the data on every member --
+  localhost:27017    PRIMARY    customers 10002  transactions 515002
+  localhost:27018    SECONDARY  customers 10002  transactions 515002
+  localhost:27019    SECONDARY  customers 10002  transactions 515002
+
+-- Wrote REPL-1793135633515 on the primary at 2026-10-27T21:13:53.515Z --
+  localhost:27018    FOUND after 6 ms of polling
+  localhost:27019    FOUND after 3 ms of polling
+
+-- The oplog entry that carried this write to the secondaries --
+{
+  op: 'i',
+  ns: 'arcledger.rs_demo',
+  ts: Timestamp({ t: 1793135633, i: 1 }),
+  wall: ISODate('2026-10-27T21:13:53.520Z'),
+  document_ref: 'REPL-1793135633515'
+}
+
+-- Replication lag (after fresh heartbeats) --
+  localhost:27017    PRIMARY    lag 0 s
+  localhost:27018    SECONDARY  lag 0 s
+  localhost:27019    SECONDARY  lag 0 s

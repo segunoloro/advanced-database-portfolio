@@ -1,0 +1,22 @@
+localhost:27019 is currently primary - asking it to step down first
+==== Part A: write concern ====
+w:1         average 5.71 ms per write  - acknowledged by the primary ONLY
+w:majority  average 6.67 ms per write  - acknowledged by 2 of 3 members
+A w:1 write can be LOST if the primary dies before replicating it (it is rolled back when the
+old primary rejoins). A w:majority write survives any single-member failure.
+
+==== Part B: stale read (localhost:27019 made 20 s delayed) ====
+Setup: DEMO-ACCOUNT-1 balance = 100,000 (waiting 22 s so the delayed member has it too)
+Customer withdraws 30,000 -> committed with w:majority (primary + one secondary)
+
+  primary, readConcern local                              balance 70000.00
+  primary, readConcern majority                           balance 70000.00
+  lagging secondary localhost:27019 (just after the write) balance 100000.00
+
+  ...waiting 22 s for the delayed secondary to catch up...
+  lagging secondary localhost:27019 (after catching up)   balance 70000.00
+
+The lagging secondary showed the OLD balance (100,000) for a while: a stale read.
+For money, read balances from the primary (or with readConcern majority + causal consistency).
+
+Restored localhost:27019: priority 1, secondaryDelaySecs 0

@@ -1,0 +1,8 @@
+Connected to localhost:27019
+isWritablePrimary: false   secondary: true
+Members it can see as up: localhost:27019
+Votes needed for a majority: 2, votes available: 1
+
+WRITE: REFUSED -> not primary
+READ:  allowed (readPreference secondaryPreferred) -> 73 rs_demo records, newest written Tue Oct 27 2026 22:16:03 GMT+0100 (West Africa Standard Time)
+       (this member cannot know whether newer writes exist elsewhere - the read may be STALE)

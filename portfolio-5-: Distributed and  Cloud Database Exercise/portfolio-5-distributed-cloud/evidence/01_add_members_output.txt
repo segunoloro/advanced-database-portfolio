@@ -1,0 +1,23 @@
+Member 0 is "vm:27017" - changing it to "localhost:27017" so all members match.
+rs.add("localhost:27018") -> ok: 1
+rs.add("localhost:27019") -> ok: 1
+
+Waiting for initial sync (copies every database to the new members)...
+  0s  localhost:27017=PRIMARY  localhost:27018=STARTUP  localhost:27019=STARTUP
+  5s  localhost:27017=PRIMARY  localhost:27018=STARTUP2  localhost:27019=STARTUP2
+  10s  localhost:27017=PRIMARY  localhost:27018=STARTUP2  localhost:27019=STARTUP2
+  15s  localhost:27017=PRIMARY  localhost:27018=STARTUP2  localhost:27019=STARTUP2
+  20s  localhost:27017=PRIMARY  localhost:27018=SECONDARY  localhost:27019=SECONDARY
+
+Replica set configuration:
+  _id 0  localhost:27017    priority 1  votes 1
+  _id 1  localhost:27018    priority 1  votes 1
+  _id 2  localhost:27019    priority 1  votes 1
+
+Members:
+  localhost:27017    PRIMARY    health 1  optime 2026-10-27T21:12:49.000Z
+  localhost:27018    SECONDARY  health 1  optime 2026-10-27T21:12:49.000Z
+  localhost:27019    SECONDARY  health 1  optime 2026-10-27T21:12:49.000Z
+
+Connect to the whole replica set from now on with:
+  mongodb://localhost:27017,localhost:27018,localhost:27019/arcledger?replicaSet=rs0

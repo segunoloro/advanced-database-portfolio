@@ -1,0 +1,44 @@
+Probe PROBE-1793135724234: one write per second for 40 s. Stop the primary now-ish.
+
+21:15:24  #  1  OK     primary=localhost:27018
+21:15:25  #  2  OK     primary=localhost:27018
+21:15:26  #  3  OK     primary=localhost:27018
+21:15:27  #  4  OK     primary=localhost:27018
+21:15:28  #  5  OK     primary=localhost:27018
+21:15:29  #  6  OK     primary=localhost:27018
+21:15:30  #  7  OK     primary=localhost:27018
+21:15:31  #  8  OK     primary=localhost:27018
+21:15:32  #  9  OK     primary=localhost:27018
+21:15:33  # 10  ERROR  connect ECONNREFUSED 127.0.0.1:27018
+21:15:36  # 11  ERROR  connect ECONNREFUSED 127.0.0.1:27018
+21:15:39  # 12  ERROR  connect ECONNREFUSED 127.0.0.1:27018
+21:15:42  # 13  OK     primary=localhost:27017
+21:15:43  # 14  OK     primary=localhost:27017
+21:15:44  # 15  OK     primary=localhost:27017
+21:15:45  # 16  OK     primary=localhost:27017
+21:15:46  # 17  OK     primary=localhost:27017
+21:15:47  # 18  OK     primary=localhost:27017
+21:15:48  # 19  OK     primary=localhost:27017
+21:15:49  # 20  OK     primary=localhost:27017
+21:15:50  # 21  OK     primary=localhost:27017
+21:15:51  # 22  OK     primary=localhost:27017
+21:15:52  # 23  OK     primary=localhost:27017
+21:15:53  # 24  OK     primary=localhost:27017
+21:15:54  # 25  OK     primary=localhost:27017
+21:15:55  # 26  OK     primary=localhost:27017
+21:15:56  # 27  OK     primary=localhost:27017
+21:15:57  # 28  OK     primary=localhost:27017
+21:15:58  # 29  OK     primary=localhost:27017
+21:15:59  # 30  OK     primary=localhost:27017
+21:16:00  # 31  OK     primary=localhost:27017
+21:16:01  # 32  OK     primary=localhost:27017
+21:16:02  # 33  OK     primary=localhost:27017
+21:16:03  # 34  OK     primary=localhost:27017
+
+==== Summary ====
+writes attempted : 34
+writes succeeded : 31
+writes failed    : 3
+primaries seen   : localhost:27018  ->  localhost:27017
+longest gap between successful writes: 10.8 s  (= how long the bank could not accept writes)
+records stored   : 31 (every acknowledged write survived the failover: true)

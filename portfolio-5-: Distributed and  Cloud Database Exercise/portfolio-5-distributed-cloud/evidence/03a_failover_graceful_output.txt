@@ -1,0 +1,50 @@
+Probe PROBE-1793135646032: one write per second for 40 s. Stop the primary now-ish.
+
+21:14:06  #  1  OK     primary=localhost:27017
+21:14:07  #  2  OK     primary=localhost:27017
+21:14:08  #  3  OK     primary=localhost:27017
+21:14:09  #  4  OK     primary=localhost:27017
+21:14:10  #  5  OK     primary=localhost:27017
+21:14:11  #  6  OK     primary=localhost:27017
+21:14:12  #  7  OK     primary=localhost:27017
+21:14:13  #  8  OK     primary=localhost:27017
+21:14:14  #  9  OK     primary=localhost:27017
+21:14:15  # 10  OK     primary=localhost:27018
+21:14:16  # 11  OK     primary=localhost:27018
+21:14:17  # 12  OK     primary=localhost:27018
+21:14:18  # 13  OK     primary=localhost:27018
+21:14:19  # 14  OK     primary=localhost:27018
+21:14:20  # 15  OK     primary=localhost:27018
+21:14:21  # 16  OK     primary=localhost:27018
+21:14:22  # 17  OK     primary=localhost:27018
+21:14:23  # 18  OK     primary=localhost:27018
+21:14:24  # 19  OK     primary=localhost:27018
+21:14:25  # 20  OK     primary=localhost:27018
+21:14:26  # 21  OK     primary=localhost:27018
+21:14:27  # 22  OK     primary=localhost:27018
+21:14:28  # 23  OK     primary=localhost:27018
+21:14:29  # 24  OK     primary=localhost:27018
+21:14:30  # 25  OK     primary=localhost:27018
+21:14:31  # 26  OK     primary=localhost:27018
+21:14:32  # 27  OK     primary=localhost:27018
+21:14:33  # 28  OK     primary=localhost:27018
+21:14:34  # 29  OK     primary=localhost:27018
+21:14:35  # 30  OK     primary=localhost:27018
+21:14:36  # 31  OK     primary=localhost:27018
+21:14:37  # 32  OK     primary=localhost:27018
+21:14:38  # 33  OK     primary=localhost:27018
+21:14:39  # 34  OK     primary=localhost:27018
+21:14:40  # 35  OK     primary=localhost:27018
+21:14:41  # 36  OK     primary=localhost:27018
+21:14:42  # 37  OK     primary=localhost:27018
+21:14:43  # 38  OK     primary=localhost:27018
+21:14:44  # 39  OK     primary=localhost:27018
+21:14:45  # 40  OK     primary=localhost:27018
+
+==== Summary ====
+writes attempted : 40
+writes succeeded : 40
+writes failed    : 0
+primaries seen   : localhost:27017  ->  localhost:27018
+longest gap between successful writes: 1.4 s  (= how long the bank could not accept writes)
+records stored   : 40 (every acknowledged write survived the failover: true)
